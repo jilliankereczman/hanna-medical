@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hanna 2027 Medical Plan Comparison</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #fff; color: #1a2b33; padding: 20px; line-height: 1.4; }
+  .wrap { max-width: 900px; margin: 0 auto; }
+  :root { --navy:#003B56; --gold:#BF912F; --teal:#2DA693; --pale:#EEF3F6; --cream:#FBF4E4; --line:#D5DFE5; --grey:#4F6B7A; }
+
+  .hero { background: var(--navy); border-radius: 16px; padding: 24px 26px; margin-bottom: 1.25rem; position: relative; }
+  .eyebrow { font-size: 11px; letter-spacing: .14em; color: var(--gold); font-weight: 700; margin-bottom: 6px; }
+  .hero h1 { font-size: 28px; color: #fff; font-weight: 700; letter-spacing: -.02em; line-height: 1.15; margin-bottom: 8px; padding-right: 110px; }
+  .hero p { font-size: 15px; color: #E3ECF1; max-width: 640px; }
+  .lang { position: absolute; top: 18px; right: 18px; display: inline-flex; border: 1px solid rgba(255,255,255,.5); border-radius: 8px; overflow: hidden; }
+  .lang button { cursor: pointer; border: 0; background: transparent; color: #fff; padding: 6px 11px; font-size: 13px; font-weight: 600; }
+  .lang button.on { background: var(--gold); color: #fff; }
+
+  .step { border: 1px solid var(--line); border-radius: 14px; padding: 1.1rem 1.25rem; margin-bottom: 1.1rem; }
+  .step h2 { font-size: 17px; color: var(--navy); font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 10px; }
+  .step h2 .n { background: var(--navy); color: #fff; width: 26px; height: 26px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+  .sub { font-size: 13px; color: var(--grey); margin-bottom: 12px; }
+  .lbl { font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; display: block; }
+
+  .seg { display: inline-flex; flex-wrap: wrap; border: 1px solid #ccc; border-radius: 8px; overflow: hidden; }
+  .seg button { cursor: pointer; border: 0; border-right: 1px solid #ccc; background: #fff; padding: 9px 14px; font-size: 14px; color: #555; }
+  .seg button:last-child { border-right: 0; }
+  .seg button:hover:not(.on) { background: #f5f5f5; }
+  .seg button.on { background: var(--navy); color: #fff; font-weight: 600; }
+  .row2 { display: flex; flex-wrap: wrap; gap: 14px 30px; }
+  .check { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; color: #444; margin-top: 14px; cursor: pointer; }
+  .check input { accent-color: var(--navy); width: 16px; height: 16px; margin-top: 2px; flex-shrink: 0; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .chips button { cursor: pointer; border: 1px solid var(--gold); background: #fff; color: #7a5a14; font-size: 13px; font-weight: 600; padding: 7px 13px; border-radius: 999px; }
+  .chips button:hover { background: var(--cream); }
+  .chips button.on { background: var(--gold); color: #fff; }
+
+  .sl { display: flex; align-items: center; gap: 12px; margin-bottom: 11px; }
+  .sl label { font-size: 13px; color: #444; width: 230px; flex-shrink: 0; }
+  .sl input[type=range] { flex: 1; min-width: 0; accent-color: var(--navy); }
+  .sl .v { font-size: 14px; font-weight: 700; color: var(--navy); width: 76px; text-align: right; flex-shrink: 0; }
+
+  .verdict { background: var(--cream); border: 1px solid #E6D3A3; border-left: 6px solid var(--gold); border-radius: 10px; padding: 14px 16px; font-size: 15px; margin-bottom: 14px; }
+  .verdict b { color: var(--navy); }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .plan { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  .plan .hd { padding: 12px 14px; color: #fff; }
+  .plan.ppo .hd { background: var(--teal); } .plan.hdhp .hd { background: var(--gold); }
+  .plan .hd b { font-size: 18px; display: block; }
+  .plan .hd span { font-size: 12px; opacity: .95; }
+  .plan .ln { display: flex; justify-content: space-between; gap: 10px; padding: 9px 14px; font-size: 14px; border-top: 1px solid #E3EAEE; }
+  .plan .ln small { display: block; font-size: 11.5px; color: var(--grey); }
+  .plan .ln.neg b { color: #1F8574; }
+  .plan .tot { background: var(--pale); padding: 12px 14px; display: flex; justify-content: space-between; align-items: baseline; border-top: 1px solid var(--line); }
+  .plan .tot span { font-size: 13px; font-weight: 700; color: var(--navy); }
+  .plan .tot b { font-size: 24px; color: var(--navy); }
+  .plan .worst { padding: 9px 14px; font-size: 12.5px; color: var(--grey); border-top: 1px solid #E3EAEE; }
+  .plan.win { border: 2px solid var(--navy); }
+  .badge { display: inline-block; background: var(--navy); color: #fff; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; margin-left: 6px; vertical-align: middle; }
+
+  .box { background: var(--pale); border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1.1rem; font-size: 14px; }
+  .box h3 { font-size: 15px; color: var(--navy); margin-bottom: 6px; }
+  .box a { color: var(--navy); font-weight: 700; }
+  .hsa { display: flex; gap: 18px; align-items: center; background: var(--navy); color: #fff; border-radius: 14px; padding: 16px 20px; margin-bottom: 1.1rem; }
+  .hsa .big { font-size: 46px; font-weight: 800; color: var(--gold); line-height: 1; flex-shrink: 0; }
+  .hsa p { font-size: 14px; color: #E3ECF1; }
+  .hsa a { color: var(--gold); font-weight: 700; }
+
+  .chart-box { position: relative; height: 260px; margin-top: 8px; }
+  .legend { display: flex; gap: 16px; font-size: 12px; color: #555; margin: 8px 0 0; flex-wrap: wrap; }
+  .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+
+  details.card { border: 1px solid var(--line); border-radius: 14px; padding: 1rem 1.25rem; margin-bottom: 1.1rem; }
+  details.card > summary { cursor: pointer; font-size: 16px; font-weight: 700; color: var(--navy); }
+  table.dt { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 12px; }
+  table.dt th { text-align: left; padding: 9px 10px; color: #fff; font-size: 13px; }
+  table.dt th:nth-child(1) { background: var(--navy); width: 24%; }
+  table.dt th:nth-child(2) { background: var(--teal); } table.dt th:nth-child(3) { background: var(--gold); }
+  table.dt td { padding: 8px 10px; border-bottom: 1px solid #E3EAEE; vertical-align: top; }
+  table.dt td:first-child { background: var(--pale); font-weight: 700; color: var(--navy); }
+  table.dt tr.sec td { background: var(--navy); color: #fff; font-weight: 700; font-size: 12px; letter-spacing: .05em; padding: 6px 10px; }
+
+  .adv .sl label { width: 230px; }
+  .adv input[type=number] { width: 110px; font-size: 14px; padding: 6px 8px; border: 1px solid #ccc; border-radius: 6px; }
+  .fine { font-size: 12px; color: #777; background: #f5f5f5; border-radius: 8px; padding: 1rem 1.25rem; line-height: 1.55; }
+  .next ol { margin: 6px 0 0 18px; } .next li { margin-bottom: 4px; }
+
+  .deadline { display: inline-block; margin-top: 12px; background: var(--gold); color: #fff; font-weight: 700; font-size: 14px; padding: 7px 14px; border-radius: 999px; }
+  .scroll { overflow-x: auto; }
+  table.pm { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 640px; }
+  table.pm th, table.pm td { padding: 9px 10px; text-align: right; border-bottom: 1px solid #E3EAEE; }
+  table.pm th:first-child, table.pm td:first-child { text-align: left; font-weight: 700; color: var(--navy); background: var(--pale); }
+  table.pm tr.g th { color: #fff; text-align: center; font-size: 14px; }
+  table.pm tr.g th.a { background: var(--navy); } table.pm tr.g th.p { background: var(--teal); } table.pm tr.g th.h { background: var(--gold); } table.pm tr.g th.s { background: var(--navy); }
+  table.pm tr.s2 th { background: var(--pale); color: var(--grey); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+  table.pm td.hl { background: var(--cream); font-weight: 700; color: var(--navy); }
+  table.pm td.sv { font-weight: 700; color: var(--navy); background: var(--cream); }
+  table.pm tr.sel td:first-child { box-shadow: inset 4px 0 0 var(--gold); }
+  .box.doc { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .box.doc .btn { background: var(--navy); color: #fff; text-decoration: none; font-weight: 700; padding: 10px 18px; border-radius: 8px; font-size: 14px; white-space: nowrap; }
+  .box.doc .btn:hover { background: #005073; }
+  @media (max-width: 640px) {
+    body { padding: 12px; }
+    .hero h1 { font-size: 22px; padding-right: 0; margin-top: 30px; }
+    .cols { grid-template-columns: 1fr; }
+    .sl { flex-wrap: wrap; } .sl label { width: 100%; } .sl .v { width: 64px; }
+    .hsa { flex-direction: column; align-items: flex-start; gap: 8px; }
+    table.dt { font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <div class="lang" role="group" aria-label="Language"><button type="button" data-l="en" class="on">EN</button><button type="button" data-l="es">ES</button></div>
+    <div class="eyebrow" data-t="eyebrow"></div>
+    <h1 data-t="title"></h1>
+    <p data-t="intro"></p>
+    <div class="deadline" data-t="deadline"></div>
+  </div>
+
+  <div class="step">
+    <h2><span class="n">1</span><span data-t="s1"></span></h2>
+    <p class="sub" data-t="s1sub"></p>
+    <div class="row2">
+      <div><span class="lbl" data-t="whoLbl"></span><div class="seg" id="seg-tier" role="group"></div></div>
+      <div><span class="lbl" data-t="payLbl"></span><div class="seg" id="seg-pay" role="group"><button type="button" data-v="52" data-t="weekly"></button><button type="button" data-v="26" class="on" data-t="biweekly"></button></div></div>
+    </div>
+    <label class="check"><input type="checkbox" id="matchOn" checked><span data-t="matchChk"></span></label>
+  </div>
+
+  <div class="step">
+    <h2><span class="n">2</span><span data-t="s2"></span></h2>
+    <p class="sub" data-t="s2sub"></p>
+    <div class="chips" id="presets"></div>
+    <div class="sl"><label for="pcp" data-t="pcp"></label><input type="range" id="pcp" min="0" max="20" step="1" value="2"><span class="v" id="pcp-v"></span></div>
+    <div class="sl"><label for="spec" data-t="spec"></label><input type="range" id="spec" min="0" max="20" step="1" value="1"><span class="v" id="spec-v"></span></div>
+    <div class="sl"><label for="urg" data-t="urg"></label><input type="range" id="urg" min="0" max="6" step="1" value="0"><span class="v" id="urg-v"></span></div>
+    <div class="sl"><label for="er" data-t="er"></label><input type="range" id="er" min="0" max="3" step="1" value="0"><span class="v" id="er-v"></span></div>
+    <div class="sl"><label for="gen" data-t="gen"></label><input type="range" id="gen" min="0" max="6" step="1" value="1"><span class="v" id="gen-v"></span></div>
+    <div class="sl"><label for="brand" data-t="brand"></label><input type="range" id="brand" min="0" max="4" step="1" value="0"><span class="v" id="brand-v"></span></div>
+    <div class="sl"><label for="big" data-t="big"></label><input type="range" id="big" min="0" max="60000" step="1000" value="0"><span class="v" id="big-v"></span></div>
+    <p class="sub" style="margin:2px 0 0;" data-t="prevNote"></p>
+  </div>
+
+  <div class="step">
+    <h2><span class="n">3</span><span data-t="s3"></span></h2>
+    <p class="sub" data-t="s3sub"></p>
+    <div class="verdict" id="verdict"></div>
+    <div class="cols" id="cols"></div>
+    <div class="box" id="hsaNote"></div>
+  </div>
+
+  <div class="step">
+    <h2 data-t="chartTitle"></h2>
+    <p class="sub" data-t="chartSub"></p>
+    <div class="chart-box"><canvas id="chart" role="img" aria-label="Line chart of estimated yearly cost for each plan as hospital or surgery bills increase"></canvas></div>
+    <div class="legend"><span><i style="background:#2DA693"></i>PPO 1500</span><span><i style="background:#BF912F"></i>HDHP 2500 + HSA</span></div>
+    <p class="sub" style="margin-top:8px;" id="breakeven"></p>
+  </div>
+
+  <div class="hsa">
+    <div class="big">$500</div>
+    <p id="hsaCall"></p>
+  </div>
+
+  <div class="step">
+    <h2 data-t="premTitle"></h2>
+    <p class="sub" data-t="premSub"></p>
+    <div class="scroll"><table class="pm" id="pm"></table></div>
+  </div>
+
+  <div class="box doc">
+    <div><h3 data-t="docTitle"></h3><span data-t="docText"></span></div>
+    <a class="btn" id="docBtn" href="https://hcpdirectory.cigna.com/web/public/consumer/directory" target="_blank" rel="noopener" data-t="docBtn"></a>
+  </div>
+
+  <details class="card" open>
+    <summary data-t="detTitle"></summary>
+    <table class="dt" id="dt"></table>
+  </details>
+
+  <details class="card adv">
+    <summary data-t="advTitle"></summary>
+    <p class="sub" style="margin-top:8px;" data-t="advSub"></p>
+    <div class="sl"><label for="p-pcp" data-t="pcp2"></label><input type="number" id="p-pcp" value="150" min="0" step="10"></div>
+    <div class="sl"><label for="p-spec" data-t="spec2"></label><input type="number" id="p-spec" value="250" min="0" step="10"></div>
+    <div class="sl"><label for="p-urg" data-t="urg2"></label><input type="number" id="p-urg" value="200" min="0" step="10"></div>
+    <div class="sl"><label for="p-er" data-t="er2"></label><input type="number" id="p-er" value="2500" min="0" step="100"></div>
+    <div class="sl"><label for="p-gen" data-t="gen2"></label><input type="number" id="p-gen" value="20" min="0" step="5"></div>
+    <div class="sl"><label for="p-brand" data-t="brand2"></label><input type="number" id="p-brand" value="200" min="0" step="10"></div>
+  </details>
+
+  <div class="box next"><h3 data-t="nextTitle"></h3><ol id="next"></ol></div>
+  <p class="fine" data-t="fine"></p>
+</div>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var MONTHLY = { ppo: [279.15, 712.27, 641.04, 1010.67], hdhp: [91.75, 306.34, 281.72, 418.73] };
+  var HDHP_URL = 'https://jilliankereczman.github.io/hanna-hsa/';
+  var DOC_URL = 'https://hcpdirectory.cigna.com/web/public/consumer/directory';
+  var FRONT = 500;
+  var state = { lang: 'en', tier: 0, pay: 26 };
+
+  var T = {
+    en: {
+      deadline: 'Enroll in Bswift by December 18, 2026', docTitle: 'Is your doctor in network?', docText: 'Search the Cigna directory and choose the Open Access Plus (OAP) network.', docBtn: 'Find a doctor',
+      premTitle: '2027 premium reference table', premSub: 'What comes out of your paycheck for each plan. Your pay frequency is highlighted.', cWeekly: 'Weekly', cBi: 'Biweekly', cMonthly: 'Monthly', cSave: 'HDHP saves you per year', cWho: 'Who is covered',
+      eyebrow: '2027 OPEN ENROLLMENT · HANNA ANDERSSON', title: 'Compare your 2027 medical plans',
+      intro: 'Tell us who is covered and the care you expect, and we will estimate what each plan could cost you for the year, including Hanna’s HSA money.',
+      s1: 'Who is covered?', s1sub: 'Premiums come from your 2027 rates.', whoLbl: 'Coverage', payLbl: 'I am paid', weekly: 'Weekly', biweekly: 'Biweekly',
+      tiers: ['Just you', 'You + spouse', 'You + kid(s)', 'You + family'],
+      matchChk: 'I plan to contribute enough to my HSA to earn Hanna’s full match (that money stays yours, so it is not counted as a cost).',
+      s2: 'What care do you expect in 2027?', s2sub: 'Start with an example, then adjust. Count the care for everyone you cover.',
+      presets: ['Healthy year', 'A few visits and a prescription', 'Ongoing condition', 'Having a baby'],
+      pcp: 'Primary care visits', spec: 'Specialist visits', urg: 'Urgent care visits', er: 'Emergency room visits', gen: 'Generic prescriptions each month', brand: 'Preferred brand prescriptions each month', big: 'Hospital, surgery or delivery bills (total)',
+      prevNote: 'Preventive care, like annual checkups, screenings and vaccines, is free in-network on both plans, so it is not counted here.',
+      s3: 'Your estimated 2027 cost', s3sub: 'In-network care only. These are estimates, not quotes.',
+      premLbl: 'Premiums', premSub: function (p) { return p + ' per paycheck'; }, careLbl: 'Your share of care costs', careSub: 'Copays, deductible and coinsurance',
+      hsaLbl: 'Hanna HSA money', hsaSub: function (m) { return m ? '$500 upfront + match' : '$500 upfront'; }, totLbl: 'Estimated yearly cost', worst: function (x) { return 'In a very costly year, the most you would pay is about ' + x + '.'; },
+      verdict: function (win, diff, perPay) {
+        if (diff < 25) return 'With the care you entered, the two plans come out <b>about the same</b>. Look at the cash-flow and risk notes below.';
+        return 'With the care you entered, the <b>' + win + '</b> could cost about <b>' + diff + ' less</b> this year (about ' + perPay + ' per paycheck).';
+      },
+      win: 'Lower estimate', ppoSub: 'Pay more per paycheck, less at the doctor', hdhpSub: 'Pay less per paycheck, more at the doctor, plus HSA money',
+      hsaNote: function (ded, oop, up) { return '<h3>Before you decide</h3>With the HDHP you pay the full cost of most care until you reach the <b>' + ded + ' deductible</b>, and the most you would pay in a year is <b>' + oop + '</b>. Your HSA is there to help cover that, and Hanna starts it with <b>' + up + '</b>. The PPO costs more each paycheck but has a lower deductible and flat copays for common visits.'; },
+      chartTitle: 'What if you have a big medical year?', chartSub: 'Estimated yearly cost as hospital, surgery or delivery bills grow, using the visits and prescriptions you entered above.',
+      beNone: 'The HDHP stays lower than the PPO at every bill size shown.', beNoneP: 'The PPO stays lower than the HDHP at every bill size shown.',
+      beAt: function (x) { return 'The plans cost about the same once hospital or surgery bills reach roughly <b>' + x + '</b>.'; },
+      xTitle: 'Hospital, surgery or delivery bills', yTitle: 'Your estimated yearly cost',
+      hsaCall: 'Hanna deposits <b>$500</b> into your HSA on day one if you choose the HDHP, then matches what you add, for a Hanna total of <b>up to $900</b> (employee only) or <b>$1,200</b> (employee + dependents). <a href="' + HDHP_URL + '" target="_blank" rel="noopener">Try the HSA planner</a> to see how it can grow.',
+      detTitle: 'Plan details side by side', advTitle: 'Adjust my cost assumptions (optional)', advSub: 'We use typical full prices to estimate your share. Change them if you know better numbers.',
+      pcp2: 'Primary care visit', spec2: 'Specialist visit', urg2: 'Urgent care visit', er2: 'Emergency room visit', gen2: 'Generic prescription (per fill)', brand2: 'Preferred brand prescription (per fill)',
+      nextTitle: 'Your next steps', next: ['Check that your doctors are in Cigna’s Open Access Plus network (<a href="' + DOC_URL + '" target="_blank" rel="noopener">search the Cigna directory</a>) and your medications are on the Advantage drug list.', 'Choose your plan in Bswift by <b>December 18, 2026</b>: Paylocity > Menu > Bswift Benefits.', 'Re-enroll in FSA, HSA and voluntary plans. They do not carry over.'],
+      fine: 'This tool gives estimates for education only and is not a quote or a promise of coverage. It uses in-network benefits from the Cigna 2027 benefit summaries (OAP 1500 and HSA 2500) and Hanna’s 2027 premiums. Prices for visits, prescriptions and hospital care vary, and your real costs will differ. Family deductibles and out-of-pocket maximums are modeled as shared amounts. On the PPO, each person also has an individual limit, so costs for one person can be lower than shown. HSA contribution limits and your tax savings are covered in the HSA planner. This is a summary; official plan documents govern coverage.',
+      rows: [
+        ['sec', 'Your costs'],
+        ['Deductible', '$1,500 individual / $3,000 family. Each person meets their own, up to the family amount.', '$2,500 employee only / $5,000 family. All family members count toward the family deductible.'],
+        ['After the deductible', 'You pay 10%', 'You pay 20%'],
+        ['Out-of-pocket maximum', '$3,000 individual / $6,000 family (medical and prescriptions combined)', '$5,500 employee only / $11,000 family (medical and prescriptions combined)'],
+        ['sec', 'Everyday care'],
+        ['Preventive care', '100% covered in-network', '100% covered in-network'],
+        ['Primary care visit', '$25 copay', '20% after deductible'],
+        ['Specialist visit', '$40 copay', '20% after deductible'],
+        ['Virtual care (MDLIVE)', '$25 primary or urgent, $40 specialty', '20% after deductible'],
+        ['Urgent care', '$40 copay', '20% after deductible'],
+        ['Emergency room', '$200 copay (waived if admitted)', '20% after deductible'],
+        ['Labs and imaging', '10% after deductible', '20% after deductible'],
+        ['sec', 'Bigger care'],
+        ['Hospital stay', '10% after deductible', '20% after deductible'],
+        ['Outpatient surgery', '10% after deductible', '20% after deductible'],
+        ['Maternity (prenatal to delivery)', '10% after deductible', '20% after deductible'],
+        ['sec', 'Other services'],
+        ['Mental health office visit', '$40 copay', '20% after deductible'],
+        ['Physical, occupational, speech therapy', '$40 copay, 60 visits a year', '20% after deductible, 60 visits a year'],
+        ['Chiropractic', '$40 copay, 25 visits a year', '20% after deductible, 25 visits a year'],
+        ['Acupuncture', '$40 copay, 20 visits a year', '20% after deductible, 20 visits a year'],
+        ['Infertility treatment', '$10,000 lifetime maximum', '$10,000 lifetime maximum'],
+        ['sec', 'Prescriptions'],
+        ['Prescription drugs', 'Per 30-day supply: generic $5, preferred brand $30, non-preferred brand $60. Lower per-month cost for 90-day fills.', 'Full cost until the combined medical and drug deductible is met, then 20%.'],
+        ['sec', 'Good to know'],
+        ['Out-of-network', 'Plan pays 70% after a $3,000 / $6,000 deductible', 'Plan pays 60% after a $5,000 / $10,000 deductible'],
+        ['HSA', 'Not eligible', 'Yes. Hanna adds $500 plus a match.'],
+        ['Not covered (both)', 'Dental, hearing aids, cosmetic surgery, nonprescription and anti-obesity drugs, smoking cessation programs', 'Same as the PPO']
+      ]
+    },
+    es: {
+      deadline: 'Inscríbase en Bswift antes del 18 de diciembre de 2026', docTitle: '¿Su médico está en la red?', docText: 'Busque en el directorio de Cigna y elija la red Open Access Plus (OAP).', docBtn: 'Buscar un médico',
+      premTitle: 'Tabla de referencia de primas 2027', premSub: 'Lo que se descuenta de su cheque de pago por cada plan. Su frecuencia de pago está resaltada.', cWeekly: 'Semanal', cBi: 'Cada dos semanas', cMonthly: 'Mensual', cSave: 'El HDHP le ahorra al año', cWho: 'Quién está cubierto',
+      eyebrow: 'INSCRIPCIÓN ABIERTA 2027 · HANNA ANDERSSON', title: 'Compare sus planes médicos 2027',
+      intro: 'Indique quién está cubierto y la atención que espera, y calcularemos cuánto podría costarle cada plan en el año, incluido el dinero de Hanna para su HSA.',
+      s1: '¿Quién está cubierto?', s1sub: 'Las primas son las tarifas de 2027.', whoLbl: 'Cobertura', payLbl: 'Me pagan', weekly: 'Semanal', biweekly: 'Cada dos semanas',
+      tiers: ['Solo usted', 'Usted + cónyuge', 'Usted + hijo(s)', 'Usted + familia'],
+      matchChk: 'Planeo aportar a mi HSA lo suficiente para recibir el aporte completo de Hanna (ese dinero sigue siendo suyo, por lo que no se cuenta como costo).',
+      s2: '¿Qué atención espera en 2027?', s2sub: 'Empiece con un ejemplo y luego ajuste. Cuente la atención de todas las personas cubiertas.',
+      presets: ['Año saludable', 'Algunas visitas y una receta', 'Condición continua', 'Tener un bebé'],
+      pcp: 'Visitas al médico de cabecera', spec: 'Visitas a especialistas', urg: 'Visitas a atención urgente', er: 'Visitas a emergencias', gen: 'Recetas genéricas por mes', brand: 'Recetas de marca preferida por mes', big: 'Facturas de hospital, cirugía o parto (total)',
+      prevNote: 'La atención preventiva, como chequeos anuales, exámenes y vacunas, es gratis dentro de la red en ambos planes, por eso no se cuenta aquí.',
+      s3: 'Su costo estimado para 2027', s3sub: 'Solo atención dentro de la red. Son estimados, no cotizaciones.',
+      premLbl: 'Primas', premSub: function (p) { return p + ' por cheque de pago'; }, careLbl: 'Su parte de los costos de atención', careSub: 'Copagos, deducible y coseguro',
+      hsaLbl: 'Dinero de Hanna para su HSA', hsaSub: function (m) { return m ? '$500 por adelantado + aporte' : '$500 por adelantado'; }, totLbl: 'Costo anual estimado', worst: function (x) { return 'En un año muy costoso, lo máximo que pagaría es aproximadamente ' + x + '.'; },
+      verdict: function (win, diff, perPay) {
+        if (diff < 25) return 'Con la atención que indicó, los dos planes salen <b>casi igual</b>. Revise las notas sobre flujo de efectivo y riesgo más abajo.';
+        return 'Con la atención que indicó, el <b>' + win + '</b> podría costar unos <b>' + diff + ' menos</b> este año (aprox. ' + perPay + ' por cheque de pago).';
+      },
+      win: 'Estimado más bajo', ppoSub: 'Paga más por cheque de pago y menos en el consultorio', hdhpSub: 'Paga menos por cheque de pago y más en el consultorio, más dinero para su HSA',
+      hsaNote: function (ded, oop, up) { return '<h3>Antes de decidir</h3>Con el HDHP usted paga el costo completo de la mayoría de la atención hasta alcanzar el <b>deducible de ' + ded + '</b>, y lo máximo que pagaría en un año es <b>' + oop + '</b>. Su HSA está para ayudarle a cubrirlo, y Hanna la inicia con <b>' + up + '</b>. El PPO cuesta más por cheque de pago, pero tiene un deducible más bajo y copagos fijos para las visitas comunes.'; },
+      chartTitle: '¿Y si tiene un año médico grande?', chartSub: 'Costo anual estimado a medida que crecen las facturas de hospital, cirugía o parto, con las visitas y recetas que indicó arriba.',
+      beNone: 'El HDHP se mantiene por debajo del PPO en todos los montos mostrados.', beNoneP: 'El PPO se mantiene por debajo del HDHP en todos los montos mostrados.',
+      beAt: function (x) { return 'Los planes cuestan casi lo mismo cuando las facturas de hospital o cirugía llegan a unos <b>' + x + '</b>.'; },
+      xTitle: 'Facturas de hospital, cirugía o parto', yTitle: 'Su costo anual estimado',
+      hsaCall: 'Hanna deposita <b>$500</b> en su HSA desde el primer día si elige el HDHP, y luego iguala lo que usted aporte, hasta un total de Hanna de <b>$900</b> (solo empleado) o <b>$1,200</b> (empleado + dependientes). <a href="' + HDHP_URL + '" target="_blank" rel="noopener">Pruebe el planificador de HSA</a> para ver cómo puede crecer.',
+      detTitle: 'Detalles de los planes lado a lado', advTitle: 'Ajustar mis supuestos de costo (opcional)', advSub: 'Usamos precios completos típicos para estimar su parte. Cámbielos si conoce mejores cifras.',
+      pcp2: 'Visita al médico de cabecera', spec2: 'Visita a especialista', urg2: 'Visita a atención urgente', er2: 'Visita a emergencias', gen2: 'Receta genérica (por surtido)', brand2: 'Receta de marca preferida (por surtido)',
+      nextTitle: 'Sus próximos pasos', next: ['Verifique que sus médicos estén en la red Open Access Plus de Cigna (<a href="' + DOC_URL + '" target="_blank" rel="noopener">busque en el directorio de Cigna</a>) y que sus medicamentos estén en la lista Advantage.', 'Elija su plan en Bswift antes del <b>18 de diciembre de 2026</b>: Paylocity > Menú > Bswift Benefits.', 'Vuelva a inscribirse en FSA, HSA y planes voluntarios. No se renuevan automáticamente.'],
+      fine: 'Esta herramienta ofrece estimados solo con fines educativos y no es una cotización ni una promesa de cobertura. Usa los beneficios dentro de la red de los resúmenes de beneficios 2027 de Cigna (OAP 1500 y HSA 2500) y las primas 2027 de Hanna. Los precios de visitas, recetas y atención hospitalaria varían, y sus costos reales serán distintos. Los deducibles y máximos de gastos de bolsillo familiares se modelan como montos compartidos. En el PPO, cada persona también tiene un límite individual, por lo que los costos de una persona pueden ser menores a los mostrados. Los límites de aportes a la HSA y sus ahorros en impuestos están en el planificador de HSA. Este es un resumen; los documentos oficiales del plan rigen la cobertura.',
+      rows: [
+        ['sec', 'Sus costos'],
+        ['Deducible', '$1,500 individual / $3,000 familiar. Cada persona cubre el suyo, hasta el monto familiar.', '$2,500 solo empleado / $5,000 familiar. Todos los miembros de la familia suman al deducible familiar.'],
+        ['Después del deducible', 'Usted paga 10%', 'Usted paga 20%'],
+        ['Máximo de gastos de bolsillo', '$3,000 individual / $6,000 familiar (médico y recetas combinados)', '$5,500 solo empleado / $11,000 familiar (médico y recetas combinados)'],
+        ['sec', 'Atención de rutina'],
+        ['Atención preventiva', 'Cubierta al 100% dentro de la red', 'Cubierta al 100% dentro de la red'],
+        ['Visita al médico de cabecera', 'Copago de $25', '20% después del deducible'],
+        ['Visita a especialista', 'Copago de $40', '20% después del deducible'],
+        ['Atención virtual (MDLIVE)', '$25 primaria o urgente, $40 especialista', '20% después del deducible'],
+        ['Atención urgente', 'Copago de $40', '20% después del deducible'],
+        ['Sala de emergencias', 'Copago de $200 (se cancela si lo hospitalizan)', '20% después del deducible'],
+        ['Laboratorios e imágenes', '10% después del deducible', '20% después del deducible'],
+        ['sec', 'Atención mayor'],
+        ['Hospitalización', '10% después del deducible', '20% después del deducible'],
+        ['Cirugía ambulatoria', '10% después del deducible', '20% después del deducible'],
+        ['Maternidad (prenatal hasta el parto)', '10% después del deducible', '20% después del deducible'],
+        ['sec', 'Otros servicios'],
+        ['Visita de salud mental', 'Copago de $40', '20% después del deducible'],
+        ['Terapia física, ocupacional y del habla', 'Copago de $40, 60 visitas al año', '20% después del deducible, 60 visitas al año'],
+        ['Quiropráctica', 'Copago de $40, 25 visitas al año', '20% después del deducible, 25 visitas al año'],
+        ['Acupuntura', 'Copago de $40, 20 visitas al año', '20% después del deducible, 20 visitas al año'],
+        ['Tratamiento de infertilidad', 'Máximo de $10,000 de por vida', 'Máximo de $10,000 de por vida'],
+        ['sec', 'Medicamentos recetados'],
+        ['Medicamentos recetados', 'Por surtido de 30 días: genérico $5, marca preferida $30, marca no preferida $60. Menor costo mensual con surtidos de 90 días.', 'Costo completo hasta cubrir el deducible combinado médico y de medicamentos, luego 20%.'],
+        ['sec', 'Es bueno saber'],
+        ['Fuera de la red', 'El plan paga 70% después de un deducible de $3,000 / $6,000', 'El plan paga 60% después de un deducible de $5,000 / $10,000'],
+        ['HSA', 'No es elegible', 'Sí. Hanna aporta $500 más un aporte igualado.'],
+        ['No cubierto (ambos)', 'Dental, audífonos, cirugía cosmética, medicamentos sin receta y para bajar de peso, programas para dejar de fumar', 'Igual que el PPO']
+      ]
+    }
+  };
+
+  var PRESETS = [
+    { pcp: 1, spec: 0, urg: 0, er: 0, gen: 0, brand: 0, big: 0 },
+    { pcp: 3, spec: 2, urg: 1, er: 0, gen: 1, brand: 0, big: 0 },
+    { pcp: 6, spec: 6, urg: 1, er: 0, gen: 2, brand: 1, big: 0 },
+    { pcp: 3, spec: 4, urg: 0, er: 0, gen: 1, brand: 0, big: 15000 }
+  ];
+
+  function usd(n) { return '$' + Math.round(n).toLocaleString('en-US'); }
+  function usd2(n) { return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function num(id) { return Number($(id).value) || 0; }
+  function t() { return T[state.lang]; }
+
+  function calc(tier, bigOverride) {
+    var multi = tier > 0;
+    var pcp = num('pcp'), spec = num('spec'), urg = num('urg'), er = num('er'), gen = num('gen'), brand = num('brand');
+    var big = bigOverride === undefined ? num('big') : bigOverride;
+    var pPcp = num('p-pcp'), pSpec = num('p-spec'), pUrg = num('p-urg'), pEr = num('p-er'), pGen = num('p-gen'), pBrand = num('p-brand');
+
+    // PPO: copays + deductible and 10% coinsurance on big bills
+    var copays = pcp * 25 + spec * 40 + urg * 40 + er * 200 + gen * 12 * 5 + brand * 12 * 30;
+    var bigPpo = big > 0 ? Math.min(big, 1500) + 0.10 * Math.max(0, big - 1500) : 0;
+    bigPpo = Math.min(bigPpo, 3000);
+    var ppoCap = multi ? 6000 : 3000;
+    var ppoCare = Math.min(copays + bigPpo, ppoCap);
+
+    // HDHP: everything counts toward deductible, then 20%
+    var S = pcp * pPcp + spec * pSpec + urg * pUrg + er * pEr + gen * 12 * pGen + brand * 12 * pBrand + big;
+    var ded = multi ? 5000 : 2500, hCap = multi ? 11000 : 5500;
+    var hCare = Math.min(Math.min(S, ded) + 0.2 * Math.max(0, S - ded), hCap);
+
+    var matchCap = multi ? 700 : 400;
+    var credit = FRONT + ($('matchOn').checked ? matchCap : 0);
+    var ppoPrem = MONTHLY.ppo[tier] * 12, hPrem = MONTHLY.hdhp[tier] * 12;
+    return {
+      ppo: { prem: ppoPrem, care: ppoCare, credit: 0, total: ppoPrem + ppoCare, worst: ppoPrem + ppoCap },
+      hdhp: { prem: hPrem, care: hCare, credit: credit, total: hPrem + hCare - credit, worst: hPrem + hCap - credit, ded: ded, cap: hCap }
+    };
+  }
+
+  function planCol(cls, name, sub, d, win, tx) {
+    var perPay = d.prem / state.pay;
+    return '<div class="plan ' + cls + (win ? ' win' : '') + '"><div class="hd"><b>' + name + (win ? '<span class="badge">' + tx.win + '</span>' : '') + '</b><span>' + sub + '</span></div>' +
+      '<div class="ln"><div>' + tx.premLbl + '<small>' + tx.premSub(usd2(perPay)) + '</small></div><b>' + usd(d.prem) + '</b></div>' +
+      '<div class="ln"><div>' + tx.careLbl + '<small>' + tx.careSub + '</small></div><b>' + usd(d.care) + '</b></div>' +
+      (cls === 'hdhp' ? '<div class="ln neg"><div>' + tx.hsaLbl + '<small>' + tx.hsaSub($('matchOn').checked) + '</small></div><b>-' + usd(d.credit) + '</b></div>' : '') +
+      '<div class="tot"><span>' + tx.totLbl + '</span><b>' + usd(d.total) + '</b></div>' +
+      '<div class="worst">' + tx.worst(usd(d.worst)) + '</div></div>';
+  }
+
+  var chart;
+  function render() {
+    var tx = t();
+    // slider labels
+    ['pcp', 'spec', 'urg', 'er', 'gen', 'brand'].forEach(function (k) { $(k + '-v').textContent = num(k); });
+    $('big-v').textContent = usd(num('big'));
+
+    var r = calc(state.tier);
+    var diff = Math.abs(r.ppo.total - r.hdhp.total);
+    var hWins = r.hdhp.total < r.ppo.total;
+    var perPayDiff = Math.abs(r.ppo.prem - r.hdhp.prem) / state.pay;
+    var winName = hWins ? 'HDHP 2500 + HSA' : 'PPO 1500';
+    var winPer = diff / state.pay;
+    $('verdict').innerHTML = tx.verdict(winName, usd(diff), usd2(winPer));
+    $('cols').innerHTML = planCol('ppo', 'PPO 1500', tx.ppoSub, r.ppo, diff >= 25 && !hWins, tx) + planCol('hdhp', 'HDHP 2500 + HSA', tx.hdhpSub, r.hdhp, diff >= 25 && hWins, tx);
+    $('hsaNote').innerHTML = tx.hsaNote(usd(r.hdhp.ded), usd(r.hdhp.cap), usd(FRONT));
+
+    // chart
+    var labels = [], dp = [], dh = [];
+    for (var x = 0; x <= 60000; x += 2000) {
+      var c = calc(state.tier, x);
+      labels.push(x); dp.push(Math.round(c.ppo.total)); dh.push(Math.round(c.hdhp.total));
+    }
+    // break-even
+    var be = null, startSign = Math.sign(calc(state.tier, 0).hdhp.total - calc(state.tier, 0).ppo.total);
+    for (var b = 0; b <= 100000; b += 500) {
+      var cc = calc(state.tier, b);
+      var sg = Math.sign(cc.hdhp.total - cc.ppo.total);
+      if (sg !== startSign && sg !== 0) { be = b; break; }
+    }
+    if (be === null) $('breakeven').innerHTML = startSign < 0 ? tx.beNone : tx.beNoneP;
+    else $('breakeven').innerHTML = tx.beAt(usd(be));
+    var cfg = {
+      labels: labels.map(function (v) { return usd(v); }), datasets: [
+        { label: 'PPO 1500', data: dp, borderColor: '#2DA693', backgroundColor: '#2DA693', tension: 0.2, pointRadius: 2 },
+        { label: 'HDHP 2500 + HSA', data: dh, borderColor: '#BF912F', backgroundColor: '#BF912F', tension: 0.2, pointRadius: 2 }
+      ]
+    };
+    if (chart) {
+      chart.data = cfg; chart.options.scales.x.title.text = tx.xTitle; chart.options.scales.y.title.text = tx.yTitle; chart.update();
+    } else if (window.Chart) {
+      chart = new Chart($('chart'), {
+        type: 'line', data: cfg,
+        options: {
+          responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+          scales: {
+            x: { title: { display: true, text: tx.xTitle, font: { size: 11 } }, ticks: { maxTicksLimit: 7, font: { size: 11 } }, grid: { display: false } },
+            y: { title: { display: true, text: tx.yTitle, font: { size: 11 } }, ticks: { callback: function (v) { return '$' + (v >= 1000 ? Math.round(v / 1000) + 'k' : v); }, font: { size: 11 } } }
+          }
+        }
+      });
+    }
+  }
+
+  function applyLang() {
+    var tx = t();
+    document.documentElement.lang = state.lang;
+    document.querySelectorAll('[data-t]').forEach(function (el) {
+      var k = el.getAttribute('data-t'); if (typeof tx[k] === 'string') el.textContent = tx[k];
+    });
+    document.querySelectorAll('.lang button').forEach(function (b) { b.classList.toggle('on', b.dataset.l === state.lang); });
+    // tier buttons
+    $('seg-tier').innerHTML = '';
+    tx.tiers.forEach(function (name, i) {
+      var b = document.createElement('button'); b.type = 'button'; b.textContent = name;
+      if (i === state.tier) b.className = 'on';
+      b.addEventListener('click', function () { state.tier = i; applyLang(); });
+      $('seg-tier').appendChild(b);
+    });
+    // presets
+    $('presets').innerHTML = '';
+    tx.presets.forEach(function (name, i) {
+      var b = document.createElement('button'); b.type = 'button'; b.textContent = name;
+      b.addEventListener('click', function () {
+        var p = PRESETS[i]; Object.keys(p).forEach(function (k) { $(k).value = p[k]; });
+        document.querySelectorAll('#presets button').forEach(function (x) { x.classList.remove('on'); }); b.classList.add('on'); render();
+      });
+      $('presets').appendChild(b);
+    });
+    $('hsaCall').innerHTML = tx.hsaCall;
+    $('next').innerHTML = tx.next.map(function (s) { return '<li>' + s + '</li>'; }).join('');
+    // details table
+    var h = '<tr><th></th><th>PPO 1500</th><th>HDHP 2500 + HSA</th></tr>';
+    tx.rows.forEach(function (row) {
+      if (row[0] === 'sec') h += '<tr class="sec"><td colspan="3">' + row[1] + '</td></tr>';
+      else h += '<tr><td>' + row[0] + '</td><td>' + row[1] + '</td><td>' + row[2] + '</td></tr>';
+    });
+    $('dt').innerHTML = h;
+    // premium reference table
+    var pmHtml = '<tr class="g"><th class="a" rowspan="2" style="vertical-align:bottom;text-align:left;">' + tx.cWho + '</th><th class="p" colspan="3">PPO 1500</th><th class="h" colspan="3">HDHP 2500 + HSA</th><th class="s" rowspan="2" style="vertical-align:bottom;">' + tx.cSave + '</th></tr>';
+    pmHtml += '<tr class="s2"><th>' + tx.cWeekly + '</th><th>' + tx.cBi + '</th><th>' + tx.cMonthly + '</th><th>' + tx.cWeekly + '</th><th>' + tx.cBi + '</th><th>' + tx.cMonthly + '</th></tr>';
+    tx.tiers.forEach(function (name, i) {
+      var pm = MONTHLY.ppo[i], hm = MONTHLY.hdhp[i];
+      function cells(m) { return [52, 26, 12].map(function (f) { return '<td class="' + (state.pay === f ? 'hl' : '') + '">' + usd2(m * 12 / f) + '</td>'; }).join(''); }
+      pmHtml += '<tr class="' + (i === state.tier ? 'sel' : '') + '"><td>' + name + '</td>' + cells(pm) + cells(hm) + '<td class="sv">' + usd((pm - hm) * 12) + '</td></tr>';
+    });
+    $('pm').innerHTML = pmHtml;
+    // pay seg active state
+    document.querySelectorAll('#seg-pay button').forEach(function (b) { b.classList.toggle('on', Number(b.dataset.v) === state.pay); });
+    render();
+  }
+
+  document.querySelectorAll('.lang button').forEach(function (b) { b.addEventListener('click', function () { state.lang = b.dataset.l; applyLang(); }); });
+  document.querySelectorAll('#seg-pay button').forEach(function (b) { b.addEventListener('click', function () { state.pay = Number(b.dataset.v); applyLang(); }); });
+  ['pcp', 'spec', 'urg', 'er', 'gen', 'brand', 'big', 'matchOn', 'p-pcp', 'p-spec', 'p-urg', 'p-er', 'p-gen', 'p-brand'].forEach(function (id) {
+    $(id).addEventListener('input', function () { document.querySelectorAll('#presets button').forEach(function (x) { x.classList.remove('on'); }); render(); });
+    $(id).addEventListener('change', render);
+  });
+  applyLang();
+})();
+</script>
+</body>
+</html>
